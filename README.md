@@ -47,12 +47,21 @@ class TodoList extends Model {
   }
 
   @action('saveTodo')
-  async saveTodo(title) {
+  async saveTodo(todoId) {
     const todo = this.todos.get(todoId)
     try {
       await server.saveTodo({id: todo.id, title: todo.title})
     } catch (error) {
-      return dispatch('saveTodoFailed')(todo.id, error)
+      return dispatch('alertUser')(
+        'Your todo could not be saved.',
+        {
+          detailedMessage: error,
+          retryAction: {
+            actionType: 'saveTodo',
+            payload: [todoId]
+          }
+        }
+      )
     }
   }
 
