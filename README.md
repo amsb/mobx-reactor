@@ -43,6 +43,17 @@ class TodoList extends Model {
   addTodo(title) {
     const todo = new Todo(title)
     this.todos.set(todo.id, todo)
+    return dispatch('saveTodo')(todo.id)
+  }
+
+  @action('saveTodo')
+  async saveTodo(title) {
+    const todo = this.todos.get(todoId)
+    try {
+      await server.saveTodo({id: todo.id, title: todo.title})
+    } catch (error) {
+      return dispatch('saveTodoFailed')(todo.id, error)
+    }
   }
 
   @action('toggleTodo')
@@ -68,7 +79,41 @@ A `StoreContext` component is created to share the store with child components.
 
 ### Connections
 
-With `StoreContext` as a parent, child components can be written as pure ("functional stateless" or "props-only") React components and wrapped with a Connect component that manages the
+This experiment has as one of its primary goals to enable writing stateless functional ("pure") React components like this one:
+
+```javascript
+class TodoListView extends React.Component {
+  handleSubmit = (event) => {
+    event.preventDefault()
+    this.props.addTodo(this.refs.newTodoTitle.value)
+    this.refs.newTodoTitle.value = ''
+  }
+  render() {
+    return (
+      <div>
+        <ul>
+          {this.props.todos.values().map(todo =>
+            <TodoView
+              key={todo.id}
+              title={todo.title}
+              isFinished={todo.isFinished}
+              onToggle={() => this.props.toggleTodo(todo.id)}
+            />
+          )}
+        </ul>
+        Tasks left: {this.props.unfinishedTodoCount}
+        <form onSubmit={this.handleSubmit}>
+          <label><input ref="newTodoTitle" placeholder="Add todo..." /> <button type="submit">Add</button></label>
+        </form>
+      </div>
+    )
+  }
+}
+```
+
+Components written like this can be tested independent of the state management framework and used with other state manage frameworks like Redux.
+
+With `StoreContext` as a parent, child components can be simply and declaratively wrapped with a Connect component that manages the state updates from the Store.
 
 ```javascript
 const TodoListViewContainer = connect(
