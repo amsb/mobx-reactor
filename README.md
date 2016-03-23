@@ -137,9 +137,13 @@ const TodoListViewContainer = connect(
 
 ### Example
 
+Want to try a working example? Here's how!
+
 ```
 npm install
 cd examples/basic
 npm install
 npm start
 ```
+
+Note that the `package.json` files in the examples directory do not contain a full list of actual dependencies, but "inherit" dependencies from main `mobx-reactor` project. This ensures that all modules import the same `mobx` modules, otherwise there will be an identity crises.

@@ -2,7 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { v4 as uuid } from 'uuid'
 
-import { observable, computed, map } from 'mobx'
+import { observable, computed, map, toJSON } from 'mobx'
 import { Store, loggingMiddleware, StoreContext, Model, action, connect, serialize } from 'mobx-reactor'
 
 // Models + Actions
@@ -118,10 +118,9 @@ store.dispatch('addTodo')('Buy milk', ['grocery'])
 store.dispatch('addTodo')('Buy tofu', ['grocery'])
 store.dispatch('addTodo')('Sell phone', ['mall'])
 
-//console.log(serialize(store.state.todoList.todos.values()[0]))
-
 // ISSUE: serialize breaks-down here
-//console.log(serialize(store.state.todoList.todos))
+console.log(serialize(store.state.todoList.todos))
+//console.log(toJSON(store.state.todoList.todos))
 
 // setTimeout(() => { console.log('add a todo'); store.dispatch('addTodo')('Get a  dog', ['CT']) }, 1000)
 // setTimeout(() => { console.log('change a title'); store.state.todoList.todos.values()[0].title = 'Buy WHOLE milk' }, 3000)

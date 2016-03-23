@@ -2,7 +2,6 @@ import test from 'ava'
 
 import { observable, computed, map } from 'mobx'
 import { serialize } from '../src/serialize'
-import { Model, action } from '../src/model'
 
 test(t => {
     let nextPersonId = 1
@@ -11,84 +10,51 @@ test(t => {
       @observable lastName = ''
       @observable tags = []
 
-      constructor(firstName, lastName) {
+      constructor(firstName, lastName, tags=[]) {
         this.id = (nextPersonId++).toString()
         this.firstName = firstName
         this.lastName = lastName
+        this.tags.push(...tags)
       }
     }
 
     class Contacts {
       @observable people = map()
 
-      addPerson(firstName, lastName) {
-        const person = new Person(firstName, lastName)
-        this.people.set(person.id, person)
-      }
-    }
-
-    const contacts = new Contacts()
-    contacts.addPerson('Maarten', 'Luther')
-
-    const result = serialize(contacts)
-    const target = {
-      "people": new Map([
-        ["0", {
-          "id": 0,
-          "firstName": "Maarten",
-          "lastName": "Luther"}
-        ]
-      ])
-    }
-
-    t.same(result.people[0], target.people[0])
-})
-
-test(t => {
-    let nextPersonId = 1
-    class Person extends Model {
-      @observable firstName = ''
-      @observable lastName = ''
-      @observable tags = []
-
-      constructor(firstName, lastName) {
-        super()
-        this.id = (nextPersonId++).toString()
-        this.firstName = firstName
-        this.lastName = lastName
-      }
-    }
-
-    class Contacts extends Model  {
-      @observable people = map()
-
-      @computed get contactsCount() {
+      @computed get numContacts() {
         return this.people.size
       }
 
-      @action('addContact')
-      addPerson(firstName, lastName) {
-        const person = new Person(firstName, lastName)
+      addPerson(firstName, lastName, tags=[]) {
+        const person = new Person(firstName, lastName, tags)
         this.people.set(person.id, person)
       }
     }
 
     const contacts = new Contacts()
-    contacts.addPerson('Maarten', 'Luther')
+    contacts.addPerson('Maarten', 'Luther', ['Protestant Reformation'])
     contacts.addPerson('Katharina', 'von Bora')
 
-    console.log(serialize(contacts))
-
-    const result = serialize(contacts)
-    const target = {
-      "people": new Map([
-        ["0", {
-          "id": 0,
-          "firstName": "Maarten",
-          "lastName": "Luther"}
-        ]
-      ])
+    const person1 = {
+      "id": "1",
+      "firstName": "Maarten",
+      "lastName": "Luther",
+      "tags": ["Protestant Reformation"]
     }
 
-    t.same(result.people[0], target.people[0])
+    const result = serialize(contacts)
+    t.same(Object.getPrototypeOf(result.people).constructor.name, 'Object')
+    t.same(result.people['1'], person1)
+    t.same(result.people['1'].tags[0], 'Protestant Reformation')
+    t.same(result.numContacts, undefined)
+
+    const resultWithMap = serialize(contacts, { keepMap: true })
+    t.same(Object.getPrototypeOf(resultWithMap.people).constructor.name, 'Map')
+    t.same(resultWithMap.people.get('1'), person1)
+    t.same(resultWithMap.people.get('1').tags[0], 'Protestant Reformation')
+
+    const resultwithComputed = serialize(contacts, { keepMap: false, withComputed: true })
+    t.same(resultwithComputed.people['1'].tags[0], 'Protestant Reformation')
+    t.same(contacts.numContacts, 2)
+    t.same(resultwithComputed.numContacts, 2)
 })
