@@ -9,7 +9,11 @@ export class Model {
 
 export function action(actionType, options={}) {
   return function decorator(target, name, descriptor) {
-    action = { methodName:name, ...options }
+    action = {
+      methodName: name,
+      displayName: target.constructor.name + '.' + name,
+      ...options
+    }
     if(!target.hasOwnProperty('__actions__')) {
       target.__actions__ = {[actionType]: [action]}
     } else if(!target.__actions__.hasOwnProperty(actionType)) {

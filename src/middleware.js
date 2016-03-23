@@ -1,3 +1,4 @@
+
 export const chainingMiddleware = options => store => {
   return function* (actionType, options, payload) {
     let value
@@ -10,31 +11,47 @@ export const chainingMiddleware = options => store => {
   }
 }
 
-
 export const loggingMiddleware = options => store => {
   return function* (actionType, options, payload) {
     const startTime = new Date()
-    console.log("%cDISPATCHED %s(%s) at %s", 'font-weight:bold;',
-      actionType, JSON.stringify(payload), startTime.toLocaleTimeString())
-    const onError = ({error, meta}) => {
-      console.group('%cERROR: ' + actionType, 'color:red;')
-      console.log('actionType: ' + actionType)
-      console.log('payload: ' + JSON.stringify(payload))
-      console.log(error)
-      console.groupCollapsed('func')
-      console.log(meta.func)
-      console.groupEnd()
-      console.groupEnd()
+    let lapTime = new Date()
+    const history = []
+
+    let hasError = false
+    const onError = ({error, ...meta}) => {
+      hasError = true
+      history.push({ name: meta.name, elapsedTime: (new Date() - lapTime), error: error })
     }
+
     let value = yield onError
     while (value) {
-      console.log("%cCOMPLETED %s %s(%s) at %s in %d ms", 'font-weight:bold;',
-        actionType, value.name, JSON.stringify(payload),
-        startTime.toLocaleTimeString(), (new Date() - startTime))
+      history.push({ name: value.name, elapsedTime: (new Date() - lapTime) })
+      lapTime = new Date()
       value = yield value
     }
-    console.log("%cFINAL %s(%s)) at %s in %d ms", 'font-weight:bold;',
-      actionType, JSON.stringify(payload), startTime.toLocaleTimeString(),
-      (new Date() - startTime))
+    console.group('%c%s @ %s in %sms' + (hasError ? ' ERROR' : ''),
+      (hasError ? 'color: red;' : 'color: black;'),
+      actionType,
+      startTime.toLocaleTimeString(),
+      (new Date() - startTime)
+    )
+    console.log('%cpayload', 'font-weight: bold; color: #03A9F4;', payload)
+    history.forEach(h => {
+      if (h.error) {
+        console.groupCollapsed('%cfunction%c %s in %sms %cERROR',
+          'font-weight: bold; color: red;',
+          'font-weight: normal; color: red;',
+          h.name, h.elapsedTime,
+          'font-weight: bold; color: red;')
+        console.error(h.error)
+        console.groupEnd()
+      } else {
+        console.log('%cfunction%c %s in %sms',
+          'font-weight: bold; color: green',
+          'font-weight: normal; color: black;',
+          h.name, h.elapsedTime)
+      }
+    })
+    console.groupEnd()
   }
 }

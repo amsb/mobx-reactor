@@ -20,8 +20,8 @@ export class Store {
     if(prototype.hasOwnProperty('__actions__')) {
       Object.keys(prototype.__actions__).forEach((actionType) => {
         let actions = prototype.__actions__[actionType].map(
-          ({ methodName, ...options }) => {
-            return { func: object[methodName], ...options }
+          ({ methodName, ...other }) => {
+            return { func: object[methodName], ...other }
           })
         if(!this.actions.hasOwnProperty(actionType)) {
           this.actions[actionType] = []
@@ -35,7 +35,7 @@ export class Store {
     if(!this.actions.hasOwnProperty(actionType)) {
       this.actions[actionType] = []
     }
-    this.actions[actionType].push({ func, ...options })
+    this.actions[actionType].push({ func, displayName: func.name, ...options })
   }
 
   dispatch = (actionType, options={}) => {
@@ -46,8 +46,8 @@ export class Store {
 
       const promises = []
       if(this.actions.hasOwnProperty(actionType)) {
-        this.actions[actionType].forEach(({ func }) => {
-          let meta = { name: func.name, func }
+        this.actions[actionType].forEach(({ func, displayName }) => {
+          let meta = { name: displayName, func }
           try {
             let actionResult = func(...payload)
             promises.push(

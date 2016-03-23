@@ -32,8 +32,8 @@ class TodoList extends Model {
     this.todos.set(todo.id, todo)
   }
 
-  @action('fail')
-  fail() {
+  @action('testError')
+  testError() {
     throw Error('an error was encountered on purpose!')
   }
 
@@ -42,6 +42,16 @@ class TodoList extends Model {
     const todo = this.todos.get(todoId)
     if(todo) {
       todo.isFinished = !todo.isFinished
+    }
+  }
+
+  @action('updateTodo')
+  updateTodo(todoId, updates={}) {
+    const todo = this.todos.get(todoId)
+    if(todo) {
+      Object.entries(updates).forEach(([key,value]) => {
+        todo[key] = value
+      })
     }
   }
 }
@@ -108,7 +118,7 @@ const store = new Store(
     todoList: new TodoList(),
   },
   [
-    loggingMiddleware()
+    loggingMiddleware({ showDiff: true })
   ]
 )
 
@@ -118,16 +128,16 @@ store.dispatch('addTodo')('Buy milk', ['grocery'])
 store.dispatch('addTodo')('Buy tofu', ['grocery'])
 store.dispatch('addTodo')('Sell phone', ['mall'])
 
-// ISSUE: serialize breaks-down here
-console.log(serialize(store.state.todoList.todos))
-//console.log(toJSON(store.state.todoList.todos))
+setTimeout(() => { console.log('dispatch to add a todo'); store.dispatch('addTodo')('Get a  dog', ['CT']) }, 1000)
+setTimeout(() => { console.log('directly change a title'); store.state.todoList.todos.values()[0].title = 'Buy WHOLE milk' }, 3000)
+setTimeout(() => { console.log('directly mark one as finished'); store.state.todoList.todos.values()[1].isFinished = true }, 5000)
+setTimeout(() => { console.log('directly add a tag'); store.state.todoList.todos.values()[2].tags.push('NEWTAG') }, 7000)
+setTimeout(() => { console.log('dispatch add a todo'); store.dispatch('addTodo')('Buy dog food', ['petco']) }, 9000)
+setTimeout(() => { console.log('dispatch change title'); store.dispatch('updateTodo')(store.state.todoList.todos.keys()[3], { title: 'Get a VISZLA!' }) }, 11000)
 
-// setTimeout(() => { console.log('add a todo'); store.dispatch('addTodo')('Get a  dog', ['CT']) }, 1000)
-// setTimeout(() => { console.log('change a title'); store.state.todoList.todos.values()[0].title = 'Buy WHOLE milk' }, 3000)
-// setTimeout(() => { console.log('mark one as finished'); store.state.todoList.todos.values()[1].isFinished = true }, 5000)
-// setTimeout(() => { console.log('add a tag'); store.state.todoList.todos.values()[2].tags.push('NEWTAG') }, 7000)
-// setTimeout(() => { console.log('add a todo'); store.dispatch('addTodo')('Buy dog food', ['petco']) }, 9000)
-// //window.store = store
+setTimeout(() => { console.log('dispatch change title'); store.dispatch('testError')() }, 500)
+
+//window.store = store
 
 // Render
 
