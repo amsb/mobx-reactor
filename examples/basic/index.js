@@ -1,31 +1,34 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
+import { v4 as uuid } from 'uuid'
 
 import { observable, computed, map } from 'mobx'
-import { Store, loggingMiddleware, StoreContext, Model, action, connect } from 'mobx-reactor'
-
+import { Store, loggingMiddleware, StoreContext, Model, action, connect, serialize } from 'mobx-reactor'
 
 // Models + Actions
 
 class Todo {
-  id = Math.random();
-  @observable title;
-  @observable isFinished = false;
-  constructor(title) {
-    this.title = title;
+  id = uuid()
+  @observable title
+  @observable isFinished = false
+  @observable tags = []
+  @computed get displayTags() { return this.tags.join() }
+  constructor(title, tags=[]) {
+    this.title = title
+    this.tags.push(...tags)
   }
 }
 
 class TodoList extends Model {
-  @observable todos = map({});
+  @observable todos = map()
 
   @computed get unfinishedTodoCount() {
-    return this.todos.values().filter(todo => !todo.isFinished).length;
+    return this.todos.values().filter(todo => !todo.isFinished).length
   }
 
   @action('addTodo')
-  addTodo(title) {
-    const todo = new Todo(title)
+  addTodo(title, tags=[]) {
+    const todo = new Todo(title, tags)
     this.todos.set(todo.id, todo)
   }
 
@@ -37,7 +40,9 @@ class TodoList extends Model {
   @action('toggleTodo')
   toggleTodo(todoId) {
     const todo = this.todos.get(todoId)
-    todo.isFinished = !todo.isFinished
+    if(todo) {
+      todo.isFinished = !todo.isFinished
+    }
   }
 }
 
@@ -59,6 +64,7 @@ class TodoListView extends React.Component {
               key={todo.id}
               title={todo.title}
               isFinished={todo.isFinished}
+              displayTags={todo.displayTags}
               onToggle={() => this.props.toggleTodo(todo.id)}
             />
           )}
@@ -72,13 +78,13 @@ class TodoListView extends React.Component {
   }
 }
 
-const TodoView = ({title,isFinished,onToggle}) => (
+const TodoView = ({title,isFinished,displayTags,onToggle}) => (
   <li>
     <input
       type="checkbox"
       checked={isFinished}
       onClick={onToggle}
-    />{title}
+    />{title} ({displayTags})
   </li>
 )
 
@@ -106,9 +112,23 @@ const store = new Store(
   ]
 )
 
-store.addAction('alert', async function(message) { alert(message) })
+// Sample Data and Interactions
 
-window.store = store
+store.dispatch('addTodo')('Buy milk', ['grocery'])
+store.dispatch('addTodo')('Buy tofu', ['grocery'])
+store.dispatch('addTodo')('Sell phone', ['mall'])
+
+//console.log(serialize(store.state.todoList.todos.values()[0]))
+
+// ISSUE: serialize breaks-down here
+//console.log(serialize(store.state.todoList.todos))
+
+// setTimeout(() => { console.log('add a todo'); store.dispatch('addTodo')('Get a  dog', ['CT']) }, 1000)
+// setTimeout(() => { console.log('change a title'); store.state.todoList.todos.values()[0].title = 'Buy WHOLE milk' }, 3000)
+// setTimeout(() => { console.log('mark one as finished'); store.state.todoList.todos.values()[1].isFinished = true }, 5000)
+// setTimeout(() => { console.log('add a tag'); store.state.todoList.todos.values()[2].tags.push('NEWTAG') }, 7000)
+// setTimeout(() => { console.log('add a todo'); store.dispatch('addTodo')('Buy dog food', ['petco']) }, 9000)
+// //window.store = store
 
 // Render
 

@@ -6,7 +6,20 @@
   "scripts": {
     "build": "babel src --out-dir lib",
     "lint": "eslint src/**/*.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "ava"
+  },
+  "ava": {
+    "files": [
+      "tests/*.js"
+    ],
+    "source": [
+      "src/*.js"
+    ],
+    "require": [
+      "babel-register",
+      "babel-polyfill"
+    ],
+    "babel": "inherit"
   },
   "keywords": [
     "MobX",
@@ -18,19 +31,21 @@
     "mobx": "^2.0.2"
   },
   "devDependencies": {
+    "ava": "^0.13.0",
     "babel-cli": "^6.6.5",
     "babel-core": "^6.7.2",
     "babel-loader": "^6.2.4",
     "babel-plugin-transform-decorators-legacy": "^1.3.4",
+    "babel-polyfill": "^6.7.2",
     "babel-preset-es2015": "^6.6.0",
     "babel-preset-react": "^6.5.0",
     "babel-preset-stage-0": "^6.5.0",
-    "core-decorators": "^0.11.1",
+    "core-decorators": "^0.12.0",
     "webpack": "^1.12.14",
     "webpack-dev-server": "^1.14.1"
   },
   "dependencies": {
-    "mobx": "^2.0.2",
+    "mobx": "^2.0.4",
     "react": "^0.14.7",
     "react-dom": "^0.14.7"
   }

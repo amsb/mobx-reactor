@@ -1,6 +1,6 @@
 import React from 'react'
 import { autorun } from 'mobx'
-
+import { serialize } from './serialize'
 
 export function connect(storeMap) {
   return function connector(Component) {
@@ -13,29 +13,35 @@ export function connect(storeMap) {
       constructor(props, context) {
         super(props, context)
         this.state = {}
+        this.stateKeys = []
         this.actions = {}
         for(let key in storeMap) {
-          let value = storeMap[key](this.context.store)
-          if(typeof(value) === 'function') {
+          const value = storeMap[key](this.context.store)
+          if(typeof value === 'function') {
             this.actions[key] = value
           } else {
+            this.stateKeys.push(key)
             this.state[key] = value
           }
         }
       }
 
       componentWillMount() {
-        this.autorunDisposer = autorun(() => {
+        this.disposer = autorun(() => {
           const nextState = {}
-          Object.keys(this.state).forEach((key) => {
-            nextState[key] = storeMap[key](this.context.store)
+          this.stateKeys.forEach((key) => {
+            const mapValue = storeMap[key]
+            if (typeof mapValue === 'function') {
+              const value = mapValue(this.context.store)
+              nextState[key] = value
+            }
           })
           this.setState(nextState)
         })
       }
 
-      componentWillUnount() {
-        this.autorunDisposer()
+      componentWillUnmount() {
+        this.disposer()
       }
 
       render() {

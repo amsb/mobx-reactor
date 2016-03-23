@@ -4,6 +4,7 @@ import { Store } from './store'
 import { chainingMiddleware, loggingMiddleware } from './middleware'
 import { StoreContext } from './storeContext'
 import { connect } from './connect'
+import { serialize } from './serialize'
 
 export {
   connect,
@@ -15,5 +16,6 @@ export {
   StoreContext,
   dispatch,
   observable,
-  computed
+  computed,
+  serialize
 }

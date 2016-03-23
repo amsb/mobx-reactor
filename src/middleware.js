@@ -20,9 +20,9 @@ export const loggingMiddleware = options => store => {
       console.group('%cERROR: ' + actionType, 'color:red;')
       console.log('actionType: ' + actionType)
       console.log('payload: ' + JSON.stringify(payload))
-      console.log(value.error)
+      console.log(error)
       console.groupCollapsed('func')
-      console.log(value.func)
+      console.log(meta.func)
       console.groupEnd()
       console.groupEnd()
     }
