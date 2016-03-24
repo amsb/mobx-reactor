@@ -2,8 +2,8 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import { v4 as uuid } from 'uuid'
 
-import { observable, computed, map, toJSON } from 'mobx'
-import { Store, loggingMiddleware, StoreContext, Model, action, connect, serialize } from 'mobx-reactor'
+import { observable, computed, map } from 'mobx'
+import { Store, chainer, logger, StoreContext, Model, action, connect, serialize } from 'mobx-reactor'
 
 // Models + Actions
 
@@ -118,7 +118,8 @@ const store = new Store(
     todoList: new TodoList(),
   },
   [
-    loggingMiddleware({ showDiff: true })
+    chainer(),
+    logger()
   ]
 )
 

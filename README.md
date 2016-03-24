@@ -17,7 +17,7 @@ const store = new Store(
     todoList: new TodoList(),
   },
   [
-    loggingMiddleware()
+    logger()
   ]
 )
 ```

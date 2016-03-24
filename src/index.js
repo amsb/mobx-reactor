@@ -1,7 +1,7 @@
 import { observable, computed } from 'mobx'
 import { Model, action, dispatch } from './model'
 import { Store } from './store'
-import { chainingMiddleware, loggingMiddleware } from './middleware'
+import { chainer, logger } from './middleware'
 import { StoreContext } from './storeContext'
 import { connect } from './connect'
 import { serialize } from './serialize'
@@ -11,8 +11,8 @@ export {
   Model,
   action,
   Store,
-  chainingMiddleware,
-  loggingMiddleware,
+  chainer,
+  logger,
   StoreContext,
   dispatch,
   observable,
