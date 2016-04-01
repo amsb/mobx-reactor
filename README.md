@@ -1,14 +1,14 @@
-# MobX-Reactor
+<p align='center'>
+  <img src='https://github.com/amsb/mobx-reactor/blob/master/logo.png?raw=true' width='400'/>
+</p>
 
-This is an experiment in connecting MobX data stores to functional stateless React components with async actions and unidirectional data flow in a flux-like architecture. It's heavily inspired by `redux`, `react-redux` and `redux-saga`, but forgoing immutability it uses `mobx` to communicate fine-grained asynchronous updates to pure view components and manage caching of derived data.
+A pragmatic library for simply connecting [MobX](http://mobxjs.github.io/mobx/) data stores and asynchronous actions to functional stateless React components with a flux-like architecture inspired by `redux`, `react-redux` and `redux-saga`.
 
-**This highly experimental, a work-in-progress, unstable, etc. CAVEAT EMPTOR.**
-
-This experiment embraces several recently and not-quite-yet standardized features of Javascript, including async/await and decorators.
+![screenshot](screenshot.png)
 
 ### Store
 
-A single shared `Store` holds application state and provides a method to `dispatch` actions to affect application logic. State and actions for operating on that state are organized into sub-objects. Each sub-object is a `model`. A `Store` can be configured with `middleware` that provides an extension point for action processing. Middleware can be created to perform activities like logging and crash reporting.
+A single shared `Store` holds application state and provides a method to `dispatch` actions to affect application logic. The `store` is assembled from `Model` sub-objects that each define and manage a piece of the application state. A `Store` can be configured with `middleware` that provides an extension point for performing activities like logging and crash reporting.
 
 
 ```javascript
@@ -22,14 +22,12 @@ const store = new Store(
 )
 ```
 
-### Actions
-
-Actions may be execute immediately or asynchronously. Actions are asynchronous when they return a `Promise` or [declared `async`](https://tc39.github.io/ecmascript-asyncawait/). Middleware can also be created to enhance how actions are processed, allowing for chaining of actions or `redux-saga`-like inversion of control through generator functions. The return value from an action is processed by `middleware`. The `chainingMiddleware`, for example, allows actions to return a description of another action to dispatch.
+> The logger currently requires you to first  `npm install deep-diff`.
 
 
 ### Models
 
-Models provide a construct to organize state with methods that operate on that state in response to relevant actions. While all state is defined through models, actions do not have to be associated with models although it is often convenient to do so. All actions are registered with the store and can have multiple responders across different models or unattached to models.
+A `Model` provides a construct to organize state with methods that operate on that state in response to relevant actions. While all state is defined through models, actions can be defined as part of a model or independently of a model.
 
 ```javascript
 class TodoList extends Model {
@@ -47,22 +45,22 @@ class TodoList extends Model {
   }
 
   @action('saveTodo')
-  async saveTodo(todoId) {
-    const todo = this.todos.get(todoId)
-    try {
-      await server.saveTodo({id: todo.id, title: todo.title})
-    } catch (error) {
-      return dispatch('alertUser')(
-        'Your todo could not be saved.',
-        {
-          detailedMessage: error,
-          retryAction: {
-            actionType: 'saveTodo',
-            payload: [todoId]
+  saveTodo(todoId) {
+    return function* () {
+      const todo = this.todos.get(todoId)
+      try {
+        yield call(server.saveTodo)({id: todo.id, title: todo.title})
+        return dispatch('todoSaved')({id: todo.id, title: todo.title})
+      } catch (error) {
+        return dispatch('alertUser')(
+          'Your todo could not be saved.',
+          {
+            detailedMessage: error.toString(),
+            onRetry: dispatch('saveTodo')(todoId)
           }
-        }
-      )
-    }
+        )
+      }
+    }.bind(this)()
   }
 
   @action('toggleTodo')
@@ -73,7 +71,17 @@ class TodoList extends Model {
 }
 ```
 
-The `@action(actionType)` decorator declares that the decorated method responds to the named action type. There is no relationship between the method name and the action type.
+The `@action(type)` decorator declares that the decorated method responds to the named action type. There is no relationship between the method name and the action type.
+
+### Actions
+
+Action handlers may be execute immediately when declared as a regular function or asynchronously when the action handler is defined as a generator function.
+
+> Currently, decorators and generator methods are not cooperating syntactically, but this should be resolved as [the decorator specification is refined and babel incorporates those improvements](https://github.com/babel/babylon/pull/14). The examples show how you can return a bound generator function until the syntactic convenience is available.
+
+#### Generator Actions
+
+Asynchronous tasks are supported in generator actions through an inversion of control that allows the store to step through the yield statements of the generator.
 
 
 ### Store Context

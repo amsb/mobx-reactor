@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom'
 import { v4 as uuid } from 'uuid'
 
 import { observable, computed, map } from 'mobx'
-import { Store, chainer, logger, StoreContext, Model, action, connect, serialize } from 'mobx-reactor'
+import { Store, logger, StoreContext, Model, action, connect, serialize } from 'mobx-reactor'
 
 // Models + Actions
 
@@ -32,9 +32,9 @@ class TodoList extends Model {
     this.todos.set(todo.id, todo)
   }
 
-  @action('testError')
-  testError() {
-    throw Error('an error was encountered on purpose!')
+  @action('exampleError')
+  exampleError() {
+    throw Error('an example error!')
   }
 
   @action('toggleTodo')
@@ -118,7 +118,6 @@ const store = new Store(
     todoList: new TodoList(),
   },
   [
-    chainer(),
     logger()
   ]
 )
@@ -136,7 +135,7 @@ setTimeout(() => { console.log('directly add a tag'); store.state.todoList.todos
 setTimeout(() => { console.log('dispatch add a todo'); store.dispatch('addTodo')('Buy dog food', ['petco']) }, 9000)
 setTimeout(() => { console.log('dispatch change title'); store.dispatch('updateTodo')(store.state.todoList.todos.keys()[3], { title: 'Get a VISZLA!' }) }, 11000)
 
-setTimeout(() => { console.log('dispatch change title'); store.dispatch('testError')() }, 500)
+setTimeout(() => { console.log('dispatch change title'); store.dispatch('exampleError')() }, 500)
 
 //window.store = store
 

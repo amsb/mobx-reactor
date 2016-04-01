@@ -1,29 +1,29 @@
 import { observable, isObservable } from 'mobx'
-import { scheduleAction } from './actions'
+//import { scheduleAction } from './actions'
 
 
 export class Store {
-  constructor(state={}, middleware=[], options={}) {
+  constructor(state={}, middleware=[]) {
     this.state = {}
     this.actions = {}
-    this.addAction('scheduleAction', scheduleAction)
+    // this.addAction('scheduleAction', scheduleAction)
     Object.keys(state).forEach((key) => { this.addState(key, state[key]) })
     this.middleware = middleware.map(m => m(this))
   }
 
   addState(key, object) {
     if (this.state.hasOwnProperty(key)) {
-      throw Error("An object already exsits for key " + key)
+      throw Error("A state object already exists for key " + key)
     }
     this.state[key] = object
     const prototype = Object.getPrototypeOf(object)
     if(prototype.hasOwnProperty('__actions__')) {
-      Object.keys(prototype.__actions__).forEach(type => {
+      Object.keys(prototype.__actions__).forEach((type) => {
         let actions = prototype.__actions__[type].map(
           ({ methodName, ...other }) => {
             const func = object[methodName]
             func.displayName = other.displayName
-            return { func , ...other }
+            return { func , object, ...other }
           })
         if(!this.actions.hasOwnProperty(type)) {
           this.actions[type] = []
@@ -37,50 +37,104 @@ export class Store {
     if(!this.actions.hasOwnProperty(type)) {
       this.actions[type] = []
     }
-    this.actions[type].push({ func, displayName: func.name, ...options })
+    func.displayName = func.name
+    this.actions[type].push({ func, ...options })
   }
 
-  dispatch = (type, options={}) => {
+  dispatch(type, options={}) {
+    const delay = options.delay || 0
+
     return (...payload) => {
-      const action = { type, options, payload }
+      const handlers = (this.actions.hasOwnProperty(type)
+        ? this.actions[type]
+        : [])
 
-      // INITIALIZE middleware
-      const middleware = this.middleware.map(m => m(action))
-      middleware.map(m => m.next()) // step to first yield
+      const action = { type, options, payload, funcs: handlers.map(a => a.func) }
 
-      // execute action responders
+      const middlewareFactories = this.middleware.map(m => m(action))
+
       const promises = []
-      if(this.actions.hasOwnProperty(type)) {
-        this.actions[type].forEach(({ func }) => {
+      handlers.forEach(({ func }) => {
+        const middlewareGenerators = middlewareFactories.map(m => m(func))
+        middlewareGenerators.forEach(m => m.next())
 
-          try {
-            // CALL action responder inside middleware
-            // through cascading function calls like this:
-            // m[0].next(p => m[1].next(p => m[2].next(func).value).value).value
-            const result = middleware.reduceRight((f,m) => {
-                const nextFunc = p => m.next(f).value
-                nextFunc.displayName = func.displayName
-                return nextFunc
-            }, func)(...action.payload)
-            promises.push(result)
-          } catch (error) {
-            if (process.env.NODE_ENV !== 'production') {
-              console.error(error)
-            }
+        try {
+          let stepper = func(...payload) // sync if regular function, async if generator
+
+          if (!isGeneratorIterable(stepper)) {
+            const stepValue = stepper
+            stepper = { next: function() { return { value: stepValue, done: true } } }
           }
-        })
-      }
 
-      // tell middleware all action responders have STARTED
-      middleware.map(m => m.next())
+          promises.push(new Promise(
+            (resolve, reject) => {
+              const processStep = ({ value: effect, done }) => {
+                middlewareGenerators.forEach(m => m.next({ effect, done }))
 
-      // return promise for all action responders
-      return Promise.all(promises).then(
-        (result) => {
-          // tell middleware all action responders have COMPLETED
-          middleware.map((m) => m.next())
+                const proccessEffect = (result, method='next') => {
+                  middlewareGenerators.forEach(m => m[method](result))
+                  if (!done) {
+                    try {
+                      let step = stepper[method](result)
+                      processStep(step)
+                    } catch (error) {
+                      middlewareGenerators.forEach(m => m.throw(error))
+                      reject(error) // well-behaved action handlers should not throw errors
+                    }
+                  } else {
+                    //middlewareGenerators.forEach(m => m.next())
+                    resolve()
+                  }
+                }
+
+                if (effect) {
+                  switch (effect.type) {
+
+                    case 'dispatch':
+                      const action = effect.payload
+                      this.dispatch(action.type, action.options || {})(
+                        ...(action.payload || []))
+                        proccessEffect(null)
+                      break
+
+                    case 'call':
+                      const { func, args } = effect.payload
+                      Promise.resolve(
+                        func(...args)
+                      ).then(
+                        result => { proccessEffect(result) },
+                        error => { proccessEffect(error, 'throw') }
+                      )
+                      break
+
+                    default:
+                      console.error('unknown effect type:', effect)
+
+                  }
+                }
+              }
+
+              processStep(stepper.next())
+            }
+          ))
+
+        } catch (error) {
+          middlewareGenerators.forEach(m => m.throw(error))
+          promises.push(Promise.reject(error)) // well-behaved action handlers should not throw errors
         }
-      )
+
+      })
+
+      return Promise.all(promises)
     }
   }
+}
+
+function isGeneratorIterable(value) {
+  return (
+    value !== null
+    && value !== undefined
+    && 'next' in value
+    && 'throw' in value
+  )
 }

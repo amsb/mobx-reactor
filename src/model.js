@@ -29,9 +29,24 @@ export function action(type, options={}) {
 export function dispatch(type, options={}) {
   return (...payload) => {
     return {
-      type,
-      options,
-      payload
+      type: 'dispatch',
+      payload: {
+        type,
+        options,
+        payload
+      }
+    }
+  }
+}
+
+export function call(func) {
+  return (...args) => {
+    return {
+      type: 'call',
+      payload: {
+        func,
+        args
+      }
     }
   }
 }
