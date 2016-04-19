@@ -1,10 +1,34 @@
 <p align='center'>
-  <img src='https://github.com/amsb/mobx-reactor/blob/master/logo.png?raw=true' width='400'/>
+  <img src='https://github.com/amsb/mobx-reactor/blob/master/logo.png?raw=true' width='400'/><br/>
+  <b>EXPERIMENTAL &mdash; WORK-IN-PROGRESS</b>
 </p>
 
 A pragmatic library for simply connecting [MobX](http://mobxjs.github.io/mobx/) data stores and asynchronous actions to functional stateless React components with a flux-like architecture inspired by `redux`, `react-redux` and `redux-saga`.
 
 ![screenshot](screenshot.png)
+
+## Benefits
+
+The intent of the library is to provide straightforward flux-style state management with a pragmatic trade-off between formality and convenience. Keep in mind as you evaluate this approach that your application may be better suited to different trade-offs (i.e. a more formal but less "convenient" alternative).
+
+##### Simple Organization
+Conveniently organize state, initializers and action handlers that modify that state together as "models" while retaining the flexibility to keep them separate when that works better.
+
+##### Functional Views
+Simply connect your state and actions to pure React components (i.e. props-only) using React context and a straightforward connect wrapper for one-way data flow.
+
+##### Easy Async
+Write declarative asynchronous logic naturally using generator functions for managing side effects without forfeiting control.
+
+##### Built-in Efficiency
+Built on MobX to efficiently manage the impact of data changes on recalculations and re-renders. MobX makes it easy to write memoizing derived views of your data and structure your application for fine-grained reactive updates without jumping through hoops.
+
+##### Decoupled Testing
+Test your functional views independent of your state, test your state independent of your views, and test your actions handlers independent of async dependencies like backend servers elementally without writing extensive mocks.
+
+## Building Blocks
+
+The mobx-reactor building blocks are a `Store`, composed of `Model` objects, together with `Action` methods connected to React components through a `StoreContext` and a `connect` wrapper.
 
 ### Store
 
@@ -22,12 +46,12 @@ const store = new Store(
 )
 ```
 
-> The logger currently requires you to first  `npm install deep-diff`.
+> The logger currently requires you to first `npm install deep-diff`.
 
 
 ### Models
 
-A `Model` provides a construct to organize state with methods that operate on that state in response to relevant actions. While all state is defined through models, actions can be defined as part of a model or independently of a model.
+A `Model` provides a construct to organize state with methods that operate on that state in response to relevant actions. A model objects are a vehicle for organization, not encapsulation. While all state is defined through models, actions can be defined as part of a model or independently of a model.
 
 ```javascript
 class TodoList extends Model {
@@ -154,4 +178,4 @@ npm install
 npm start
 ```
 
-Note that the `package.json` files in the examples directory do not contain a full list of actual dependencies, but "inherit" dependencies from main `mobx-reactor` project. This ensures that all modules import the same `mobx` modules, otherwise there will be an identity crises.
+Note that the `package.json` files in the examples directory do not contain a full list of actual dependencies, but "inherit" dependencies from main mobx-reactor project. This ensures that all modules import the same MobX modules, otherwise there will be an identity crises.
