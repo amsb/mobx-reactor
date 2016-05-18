@@ -3,10 +3,9 @@ import ReactDOM from 'react-dom'
 import { v4 as uuid } from 'uuid'
 
 import { observable, computed, map } from 'mobx'
-import { Store, logger, StoreContext, Model, action, connect, serialize } from 'mobx-reactor'
+import { Store, logger, StoreContext, Substore, action, connect, serialize } from 'mobx-reactor'
 
-// Models + Actions
-
+// Model
 class Todo {
   id = uuid()
   @observable title
@@ -19,7 +18,9 @@ class Todo {
   }
 }
 
-class TodoList extends Model {
+// Sub-store + Actions
+
+class TodoList extends Substore {
   @observable todos = map()
 
   @computed get unfinishedTodoCount() {

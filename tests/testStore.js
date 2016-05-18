@@ -1,12 +1,12 @@
 import test from 'ava'
 
 import { observable, map } from 'mobx'
-import { Model, action } from '../src/model'
+import { Substore, action } from '../src/substore'
 import { Store } from '../src/store'
 
 test(t => {
   let nextPersonId = 1
-  class Person extends Model {
+  class Person extends Substore {
     @observable name = ''
     constructor(name) {
       super()
@@ -15,7 +15,7 @@ test(t => {
     }
   }
 
-  class Contacts extends Model {
+  class Contacts extends Substore {
     @observable people = map()
 
     @action('addPerson')
