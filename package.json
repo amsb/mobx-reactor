@@ -1,6 +1,6 @@
 {
   "name": "mobx-reactor",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Connect MobX data stores to functional stateless React components with flux-like async actions and unidirectional data flow.",
   "main": "lib/index.js",
   "scripts": {
