@@ -28,11 +28,11 @@ Test your functional views independent of your state, test your state independen
 
 ## Building Blocks
 
-The mobx-reactor building blocks are a `Store`, composed of `Model` objects, together with `Action` methods connected to React components through a `StoreContext` and a `connect` wrapper.
+The mobx-reactor building blocks are a `Store`, composed of `Substore` objects, together with `Action` methods connected to React components through a `StoreContext` and a `connect` wrapper.
 
 ### Store
 
-A single shared `Store` holds application state and provides a method to `dispatch` actions to affect application logic. The `store` is assembled from `Model` sub-objects that each define and manage a piece of the application state. A `Store` can be configured with `middleware` that provides an extension point for performing activities like logging and crash reporting.
+A single shared `Store` holds application state and provides a method to `dispatch` actions to affect application logic. The `store` is assembled from `Substore` sub-objects that each define and manage a piece of the application state. A `Store` can be configured with `middleware` that provides an extension point for performing activities like logging and crash reporting.
 
 
 ```javascript
@@ -49,12 +49,12 @@ const store = new Store(
 > The logger currently requires you to first `npm install deep-diff`.
 
 
-### Models
+### Substores
 
-A `Model` provides a construct to organize state with methods that operate on that state in response to relevant actions. A model objects are a vehicle for organization, not encapsulation. While all state is defined through models, actions can be defined as part of a model or independently of a model.
+A `Substore` provides a construct to organize state in sub-stores with methods that operate on that state in response to relevant actions. A sub-store objects are a vehicle for organization, not encapsulation. While all state is defined through this stores, actions can be defined as part of a store or independently of a store.
 
 ```javascript
-class TodoList extends Model {
+class TodoList extends Substore {
   @observable todos = map({});
 
   @computed get unfinishedTodoCount() {

@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom'
 import { v4 as uuid } from 'uuid'
 
 import { observable, computed, map } from 'mobx'
-import { Store, logger, StoreContext, Model, action, dispatch, call, connect } from 'mobx-reactor'
+import { Store, logger, StoreContext, Substore, action, dispatch, call, connect } from 'mobx-reactor'
 import { exemplar } from 'mobx-reactor/middleware/exemplar'
 
 // Auth "Lib"
@@ -24,9 +24,9 @@ function sleep(n) {
   }, n))
 }
 
-// Models + Actions
+// Sub-store + Actions
 
-class Auth extends Model {
+class Auth extends Substore {
   @observable status = 'UNAUTHORIZED';
   @observable token = '';
   @observable userId = '';

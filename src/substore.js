@@ -2,7 +2,7 @@ import React from 'react'
 import { observable, computed, autorun } from 'mobx'
 import { autobind } from 'core-decorators'
 
-export class Model {
+export class Substore {
   constructor() {
   }
 }
