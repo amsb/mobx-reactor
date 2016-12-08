@@ -30,8 +30,8 @@ test(t => {
     contacts: new Contacts()
   })
 
-  t.same(
+  t.deepEqual(
     Object.keys(store.actions),
-    ["scheduleAction","addPerson"]
+    ["addPerson"]
   )
 })

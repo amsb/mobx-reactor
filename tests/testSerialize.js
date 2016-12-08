@@ -43,18 +43,18 @@ test(t => {
     }
 
     const result = serialize(contacts)
-    t.same(Object.getPrototypeOf(result.people).constructor.name, 'Object')
-    t.same(result.people['1'], person1)
-    t.same(result.people['1'].tags[0], 'Protestant Reformation')
-    t.same(result.numContacts, undefined)
+    t.deepEqual(Object.getPrototypeOf(result.people).constructor.name, 'Object')
+    t.deepEqual(result.people['1'], person1)
+    t.deepEqual(result.people['1'].tags[0], 'Protestant Reformation')
+    t.deepEqual(result.numContacts, undefined)
 
     const resultWithMap = serialize(contacts, { keepMap: true })
-    t.same(Object.getPrototypeOf(resultWithMap.people).constructor.name, 'Map')
-    t.same(resultWithMap.people.get('1'), person1)
-    t.same(resultWithMap.people.get('1').tags[0], 'Protestant Reformation')
+    t.deepEqual(Object.getPrototypeOf(resultWithMap.people).constructor.name, 'Map')
+    t.deepEqual(resultWithMap.people.get('1'), person1)
+    t.deepEqual(resultWithMap.people.get('1').tags[0], 'Protestant Reformation')
 
     const resultwithComputed = serialize(contacts, { keepMap: false, withComputed: true })
-    t.same(resultwithComputed.people['1'].tags[0], 'Protestant Reformation')
-    t.same(contacts.numContacts, 2)
-    t.same(resultwithComputed.numContacts, 2)
+    t.deepEqual(resultwithComputed.people['1'].tags[0], 'Protestant Reformation')
+    t.deepEqual(contacts.numContacts, 2)
+    t.deepEqual(resultwithComputed.numContacts, 2)
 })
